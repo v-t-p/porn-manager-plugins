@@ -403,7 +403,8 @@ async ({
     // Returns true if a custom field is enabled in the plugin config
     function is_enabled_custom_field(src_element, custom_field, src_custom_fields) {
         try {
-            if (src_element.extra_info[custom_field] !== undefined &&
+            if (src_element.extra_info !== undefined &&
+                src_element.extra_info[custom_field] !== undefined &&
                 src_element.extra_info[custom_field] &&
                 src_element.extra_info[custom_field] !== "" && src_custom_fields[custom_field] !== "") {
                 return true;
