@@ -299,7 +299,6 @@ async ({
         }
         // Set Custom Fields
         if (result['custom'] === undefined) {
-            $log("custom first init");
             result['custom'] = {};
         }
         const src_custom_fields = src_config[element.id].custom_field_map;
@@ -405,6 +404,7 @@ async ({
     function is_enabled_custom_field(src_element, custom_field, src_custom_fields) {
         try {
             if (src_element.extra_info[custom_field] !== undefined &&
+                src_element.extra_info[custom_field] &&
                 src_element.extra_info[custom_field] !== "" && src_custom_fields[custom_field] !== "") {
                 return true;
             }
