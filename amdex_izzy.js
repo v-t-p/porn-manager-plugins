@@ -1,5 +1,5 @@
 /*
-    [AmDeX] : Actor MetaData Extractor v1.1 (2020-APR-12)
+    [AmDeX] : Actor MetaData Extractor v1.2 (2020-APR-13)
 
     EXPERIMENTAL VERSION COMPATIBLE WITH THE "izzy" BRANCH CURRENTLY IN DEVELOPMENT
 
@@ -342,6 +342,7 @@ module.exports = async ({
                 if (!args["prefer_metric"]) {
                     // convert to imperial
                     wgt *= 2.2;
+                    wgt = Math.round((wgt + Number.EPSILON) * 100) / 100;
                 }
                 result['custom'][src_custom_fields.weight] = wgt;
             }
@@ -351,6 +352,7 @@ module.exports = async ({
                 if (!args["prefer_metric"]) {
                     // convert to imperial
                     hgt *= 0.033;
+                    hgt = Math.round((hgt + Number.EPSILON) * 100) / 100;
                 }
                 result['custom'][src_custom_fields.height] = hgt;
             }
@@ -375,7 +377,7 @@ module.exports = async ({
                 const hps = element.extra_info.measurements.split("-")[2].substr(0, 2);
                 result['custom'][src_custom_fields.hips] = hps;
             }
-            if (is_enabled_custom_field(element, "chest_size", src_custom_fields)) {
+            if (is_enabled_custom_field(element, "measurements", src_custom_fields)) {
                 const csz = element.extra_info.measurements.split("-")[0].substr(0, 2);
                 result['custom'][src_custom_fields.chest_size] = csz;
             }
