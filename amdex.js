@@ -1,5 +1,5 @@
 /*
-    [AmDeX] : Actor MetaData Extractor v1.0 (2020-APR-12)
+    [AmDeX] : Actor MetaData Extractor v1.1 (2020-APR-12)
 
     This "extensible" Actor plugin currently extracts actor information from:
         - FreeOnes
@@ -55,7 +55,6 @@
         5. Profit
 
     CURRENTLY-NOT-IMPLEMENTED:
-        - use_thumbnail_as_avatar_if_not_available
         - use_next_source_on_failure
 
     Thanks @john4valor for help with TPDB and FreeOnes
@@ -242,7 +241,6 @@ async ({
         $log(`[AMDX] Processing data from ${element.id}`);
         // Set avatar
         if (args.set_avatar && args.avatar_source === element.id) {
-            // result['avatar'] = element.img_urls[0];
             result['avatar'] = element.img_urls.shift();
         }
         // TODO: implement use next source on failure here
@@ -386,6 +384,16 @@ async ({
     // Download images and replace URLs with image ids in result object
     $log("[AMDX] MSG: Downloading Images");
     result = await save_images_from_result(actorName, result);
+    if (args.use_thumbnail_as_avatar_if_not_available && !result['avatar']) {
+        if(result['thumbnail']) {
+            $log("[AMDX] MSG: Avatar NOT available. Using Thumbnail as Avatar");
+            result['avatar'] = result['thumbnail'];
+        }
+        else if(result['altThumbnail']) {
+            $log("[AMDX] MSG: Avatar and Thumbnail NOT available. Using Alt Thumbnail as Avatar");
+            result['avatar'] = result['altThumbnail'];
+        }
+    }
     // Do not return/save results if running in debug mode
     if (args.debug) {
         $log("[AMDX] MSG: Final Result:")
@@ -419,8 +427,8 @@ async ({
     // Downloads image and replaces URL in src_result with Image ID
     async function save_images_from_result(actor_name, src_result) {
         // Use async only if all images are present, or else image order gets screwed up
-        if(src_result.avatar !== undefined && src_result.thumbnail !== undefined && src_result.altThumbnail !== undefined) {
-            $log("[AMDX] MSG: Downloading Images CONCURRENTLY");
+        if (src_result.avatar !== undefined && src_result.thumbnail !== undefined && src_result.altThumbnail !== undefined) {
+            $log("[AMDX] MSG: ALL Image URLs Available. Downloading CONCURRENTLY");
             let img_dl_tasks = [];
             img_dl_tasks.push($createImage(src_result['avatar'], `${actor_name} (profile picture)`));
             img_dl_tasks.push($createImage(src_result['thumbnail'], `${actor_name} (thumb)`));
@@ -431,7 +439,7 @@ async ({
             src_result['altThumbnail'] = dl_imgs[2];
         }
         else {
-            $log("[AMDX] MSG: Downloading Images SEQUENTIALLY");
+            $log("[AMDX] MSG: SOME Image URLs Available. Downloading SEQUENTIALLY");
             if (src_result.avatar !== undefined && src_result.avatar.startsWith('http')) {
                 src_result['avatar'] = await $createImage(src_result['avatar'], `${actor_name} (profile picture)`);
             }
@@ -454,7 +462,7 @@ async ({
         };
         const freeones_url = `https://www.freeones.xxx/${actor_name.replace(".", "").replace(/ /g, "-")}/profile`;
         let freeones_html = "";
-        var freeones_response = (await $axios.get(freeones_url, {validateStatus: false}));
+        var freeones_response = (await $axios.get(freeones_url, { validateStatus: false }));
         let $ = null;
         // Get Date of Birth first
         if (freeones_response.status == 200) {
@@ -468,7 +476,7 @@ async ({
                 const timestamp = $moment(date, "YYYY-MM-DD").valueOf();
                 result["born_on"] = timestamp;
             } else {
-                $log("[AMDX] ERR: FreeOnes Date of Birth not found");
+                $log("[AMDX] ERR: FreeOnes Date of Birth NOT found");
             }
             // Get image if not placeholder
             const freeones_actor_images = $(".img-fluid").toArray();
@@ -480,7 +488,7 @@ async ({
                 $log("[AMDX] ERR: FreeOnes No image found for actor");
             }
         } else {
-            $log("[AMDX] ERR: FreeOnes Page not found");
+            $log("[AMDX] ERR: FreeOnes Page NOT found");
             return result;
         }
         // Set up extra info for custom fields
@@ -527,7 +535,7 @@ async ({
         };
         // Extract Actor aliases and up to two images from BabePedia
         const bpedia_profile_url = `https://www.babepedia.com/babe/${actor_name.replace(/ /g, "_")}`;
-        const bpedia_response = (await $axios.get(bpedia_profile_url, {validateStatus: false}));
+        const bpedia_response = (await $axios.get(bpedia_profile_url, { validateStatus: false }));
         if (bpedia_response.status == 200) {
             const bpedia_page_content = bpedia_response.data;
             const bpedia_cheerio = $cheerio.load(bpedia_page_content);
@@ -571,7 +579,7 @@ async ({
             'bio': new Set()
         };
         const tpdb_perf_search_url = `https://master.metadataapi.net/api/performers?q=${encodeURI(actor_name)}`;
-        const tpdb_perf_search_response = (await $axios.get(tpdb_perf_search_url, {validateStatus: false}));
+        const tpdb_perf_search_response = (await $axios.get(tpdb_perf_search_url, { validateStatus: false }));
         if (tpdb_perf_search_response.status != 200 || tpdb_perf_search_response.data === undefined) {
             $log("[AMDX] ERR: TPDB API query failed");
             return result;
@@ -594,7 +602,7 @@ async ({
             }
         }
         if (correct_perf_idx == -1) {
-            $log("[AMDX] ERR: TPDB Could not find correct actor info");
+            $log("[AMDX] ERR: TPDB Could NOT find correct actor info");
             return result;
         }
         const tpdb_perf_search_data = tpdb_perf_search_content.data[correct_perf_idx];
@@ -606,14 +614,14 @@ async ({
         result['img_urls'].push(tpdb_perf_search_data.image);
         result['img_urls'].push(tpdb_perf_search_data.thumbnail);
         const tpdb_perf_url = `https://master.metadataapi.net/api/performers/${tpdb_perf_search_data.id}`;
-        const tpdb_perf_response = (await $axios.get(tpdb_perf_url, {validateStatus: false}));
+        const tpdb_perf_response = (await $axios.get(tpdb_perf_url, { validateStatus: false }));
         if (tpdb_perf_response.status != 200 || tpdb_perf_response.data === undefined) {
             $log("[AMDX] ERR: TPDB Direct Actor Information Access Failed");
             return result;
         }
         const perf_data = tpdb_perf_response.data.data;
         if (perf_data === undefined) {
-            $log("[AMDX] ERR: TPDB Could not read actor information");
+            $log("[AMDX] ERR: TPDB Could NOT read actor information");
             return result;
         }
         // Add actor bio if user requested all bio
