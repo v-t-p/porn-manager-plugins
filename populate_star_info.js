@@ -1,4 +1,15 @@
 /*
+    ---------------------------------------------------------------------------
+        WARNING: THIS PLUGIN IS NOW DEPRECATED AND WILL NOT BE UPDATED!
+        PLEASE USE THE AmDeX PLUGIN INSTEAD.
+
+        AmDeX has feature parity with this plugin and offers many more
+        features and performance improvements.
+    
+        PLEASE USE amdex.js AND READ THE SETUP INSTRUCTIONS PRESENT AT THE
+        BEGINNING OF THE PLUGIN FILE.
+    ---------------------------------------------------------------------------
+
     This actor plugin extracts the following information:
     1. Actor images for Avatar, Thumbnail and Alternate Thumbnail
        a. Smart image extraction - placeholder images from FreeOnes are not downloaded
