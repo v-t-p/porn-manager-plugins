@@ -427,7 +427,7 @@ async ({
     // Downloads image and replaces URL in src_result with Image ID
     async function save_images_from_result(actor_name, src_result) {
         // Use async only if all images are present, or else image order gets screwed up
-        if (src_result.avatar !== undefined && src_result.thumbnail !== undefined && src_result.altThumbnail !== undefined) {
+        if (src_result.avatar && src_result.thumbnail && src_result.altThumbnail) {
             $log("[AMDX] MSG: ALL Image URLs Available. Downloading CONCURRENTLY");
             let img_dl_tasks = [];
             img_dl_tasks.push($createImage(src_result['avatar'], `${actor_name} (profile picture)`));
@@ -438,7 +438,7 @@ async ({
             src_result['thumbnail'] = dl_imgs[1];
             src_result['altThumbnail'] = dl_imgs[2];
         }
-        else {
+        else if(src_result.avatar || src_result.thumbnail || src_result.altThumbnail) {
             $log("[AMDX] MSG: SOME Image URLs Available. Downloading SEQUENTIALLY");
             if (src_result.avatar !== undefined && src_result.avatar.startsWith('http')) {
                 src_result['avatar'] = await $createImage(src_result['avatar'], `${actor_name} (profile picture)`);
@@ -448,6 +448,9 @@ async ({
             }
             if (src_result.altThumbnail !== undefined && src_result.altThumbnail.startsWith('http')) {
                 src_result['altThumbnail'] = await $createImage(src_result['altThumbnail'], `${actor_name} (altthumb)`);
+            }
+            else {
+                $log("[AMDX] ERR: No Image URLs available");
             }
         }
         return src_result;
